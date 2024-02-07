@@ -27,9 +27,16 @@ public class UsuarioService {
     }
 
     @Transactional
-    public Usuario editarSenha(Long id, String password) {
+    public Usuario editarSenha(Long id, String senhaAtual, String novaSenha, String confirmacaoSenha) {
+        if (!novaSenha.equals(confirmacaoSenha)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nova senha e confirmação de senha não conferem");
+        }
         Usuario user = buscarPorId(id);
-        user.setPassword(password);
+        if (!user.getPassword().equals(senhaAtual)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha não confere");
+        }
+
+        user.setPassword(novaSenha);
         return user;
     }
 

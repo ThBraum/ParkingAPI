@@ -4,7 +4,9 @@ import com.thbraum.demoparkapi.entity.Usuario;
 import com.thbraum.demoparkapi.service.UsuarioService;
 import com.thbraum.demoparkapi.web.dto.UsuarioCreateDto;
 import com.thbraum.demoparkapi.web.dto.UsuarioResponseDto;
+import com.thbraum.demoparkapi.web.dto.UsuarioSenhaDto;
 import com.thbraum.demoparkapi.web.dto.mapper.UsuarioMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -21,35 +23,28 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @GetMapping
-    public ResponseEntity<List<Usuario>> getAll() {
+    public ResponseEntity<List<UsuarioResponseDto>> getAll() {
         List<Usuario> usuarios = usuarioService.buscarTodos();
 
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(UsuarioMapper.toListDto(usuarios));
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
-        try {
-            Usuario user = usuarioService.buscarPorId(id);
+    public ResponseEntity<UsuarioResponseDto> getById(@PathVariable Long id) {
+        Usuario user = usuarioService.buscarPorId(id);
 
-            return ResponseEntity.ok(user);
-        } catch (ResponseStatusException e) {
-            HttpStatusCode status = e.getStatusCode();
-            String reason = e.getReason();
-            return ResponseEntity.status(status).body(reason);
-        }
-
+        return ResponseEntity.ok(UsuarioMapper.toDto(user));
     }
 
     @PatchMapping("{id}")
-    public ResponseEntity<Usuario> updatePassword(@PathVariable Long id, @RequestBody Usuario usuario) {
-        Usuario user = usuarioService.editarSenha(id, usuario.getPassword());
+    public ResponseEntity<Void> updatePassword(@PathVariable Long id, @RequestBody UsuarioSenhaDto usuario) {
+        Usuario user = usuarioService.editarSenha(id, usuario.getSenhaAtual(), usuario.getNovaSenha(), usuario.getConfirmacaoSenha());
 
-        return ResponseEntity.ok(user);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioResponseDto> create(@RequestBody UsuarioCreateDto createDto) {
+    public ResponseEntity<UsuarioResponseDto> create(@Valid @RequestBody UsuarioCreateDto createDto) {
         Usuario user = usuarioService.salvar(UsuarioMapper.toUsuario(createDto));
         return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioMapper.toDto(user));
     }
